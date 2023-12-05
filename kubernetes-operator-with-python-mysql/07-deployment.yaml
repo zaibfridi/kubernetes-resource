@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-writer-operator
+  namespace: crd-op-writer
+  labels:
+    app: mysql-writer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-writer
+  template:
+    metadata:
+      labels:
+        app: mysql-writer
+    spec:
+      serviceAccountName: crd-op-writer
+      containers:
+      - name: mysql-writer
+        image: mysql-writer:latest
+        imagePullPolicy: IfNotPresent
+        env: ##  preferably load this via a configmap or/and secret instead
+          - name: MYSQL_HOST
+            value: "PLACE_IP_HERE" #IP MySQL svc NodePort
+          - name: MYSQL_USERNAME
+            value: appuser
+          - name: MYSQL_PASSWORD
+            value: PLACE_MYSQL_PASSWORD_HERE
+          - name: MYSQL_DB
+            value: appdb

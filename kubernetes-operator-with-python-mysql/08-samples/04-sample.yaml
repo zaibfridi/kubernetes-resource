@@ -1,0 +1,12 @@
+
+
+apiVersion: demo.com/v1
+kind: CrdOpWriter
+metadata:
+  name: sample-client-04
+  
+spec:
+  table: clients
+  name: alex-04
+  age: 23
+  country: canada

@@ -1,0 +1,10 @@
+kind: Kustomization
+namespace: crd-op-writer
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=PLACE_MYSQL_PASSWORD_HERE
+resources:
+  - mysql-deployment.yaml

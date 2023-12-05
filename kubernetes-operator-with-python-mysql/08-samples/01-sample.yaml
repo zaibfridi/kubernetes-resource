@@ -1,0 +1,12 @@
+
+
+apiVersion: demo.com/v1
+kind: CrdOpWriter
+metadata:
+  name: sample-client-01
+  namespace: crd-op-writer
+spec:
+  table: clients
+  name: alex-01
+  age: 23
+  country: canada

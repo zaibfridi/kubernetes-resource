@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: crd-op-app-mysql
+  namespace: crd-op-writer
+  labels:
+    app: crd-op-app
+spec:
+  type: NodePort
+  ports:
+    - port: 3306
+  selector:
+    app: crd-op-app
+    tier: mysql
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  namespace: crd-op-writer
+  labels:
+    app: crd-op-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: crd-op-writer
+  labels:
+    app: crd-op-app
+data:
+  initdb.sql: |
+    USE appdb;
+    DROP TABLE IF EXISTS clients;
+    CREATE TABLE clients (
+        id varchar(255) NOT NULL,
+        name varchar(255) NOT NULL,
+        age int(20) NOT NULL,
+        country varchar(255) NOT NULL,
+        PRIMARY KEY (id)
+    );
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crd-op-app-mysql
+  namespace: crd-op-writer
+  labels:
+    app: crd-op-app
+spec:
+  selector:
+    matchLabels:
+      app: crd-op-app
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: crd-op-app
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:8.0.32
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: MYSQL_DATABASE
+          value: appdb
+        - name: MYSQL_USER
+          value: appuser
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config
